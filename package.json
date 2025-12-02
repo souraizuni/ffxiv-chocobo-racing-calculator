@@ -1,0 +1,24 @@
+{
+  "name": "ffxiv-chocobo-racing-calculator",
+  "version": "1.0.0",
+  "description": "Final Fantasy XIV 仙人微彩計算器 - 揭格建議、概率分析、風險評估",
+  "main": "index.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ffxiv-chocobo-racing-calculator.git"
+  },
+  "keywords": [
+    "ffxiv",
+    "chocobo",
+    "racing",
+    "calculator",
+    "ff14",
+    "probability",
+    "analysis"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "serve": "python -m http.server 8000"
+  }
+}

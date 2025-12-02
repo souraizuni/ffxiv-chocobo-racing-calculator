@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFXIV 仙人微彩計算器 - 進階版</title>
+    <meta name="description" content="Final Fantasy XIV 仙人微彩計算器進階版，提供揭格建議、概率分析、風險評估，幫助你做出最佳決策。">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="FFXIV 仙人微彩計算器 - 進階版">
+    <meta property="og:description" content="提供揭格建議、概率分析、風險評估的進階仙人微彩計算器">
+    <meta property="og:type" content="website">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --panel-bg-light: #21262d;
+            --text-color: #e6edf3;
+            --text-muted: #8b949e;
+            --gold: #f0b429;
+            --gold-dim: #9e7a1a;
+            --gold-highlight: #ffd666;
+            --input-bg: #0d1117;
+            --border-color: #30363d;
+            --error-color: #f85149;
+            --success-color: #3fb950;
+            --info-color: #58a6ff;
+            --purple: #a371f7;
+            --cyan: #39d353;
+            --orange: #f78166;
+            --gradient-gold: linear-gradient(135deg, #f0b429 0%, #d4a012 100%);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(ellipse at top, rgba(240, 180, 41, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(163, 113, 247, 0.03) 0%, transparent 50%);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--gold);
+            margin: 0;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            text-align: center;
+            letter-spacing: 2px;
+            text-shadow: 0 0 30px rgba(240, 180, 41, 0.3);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .status-bar {
+            min-height: 28px;
+            font-weight: 500;
+            font-size: 14px;
+            text-align: center;
+            padding: 6px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .status-bar.error {
+            color: var(--error-color);
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .status-bar.success {
+            color: var(--success-color);
+            background: rgba(63, 185, 80, 0.1);
+        }
+
+        .status-bar.info {
+            color: var(--info-color);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .status-bar:empty {
+            background: transparent;
+        }
+
+        /* 主容器佈局 */
+        .main-container {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 30px;
+            width: 100%;
+            align-items: start;
+        }
+
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .right-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 面板通用樣式 */
+        .panel {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--gold);
+            margin: 0 0 16px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 1px;
+        }
+
+        .panel-title .icon {
+            font-size: 16px;
+        }
+
+        /* 計算器面板 */
+        .calculator-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 5x5 網格佈局 */
+        .grid-wrapper {
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            grid-template-rows: repeat(5, auto);
+            gap: 10px;
+            align-items: center;
+            justify-items: center;
+        }
+
+        /* 輸入框樣式 */
+        .cell-input {
+            width: 64px;
+            height: 64px;
+            font-size: 28px;
+            text-align: center;
+            background-color: var(--input-bg);
+            border: 2px solid var(--border-color);
+            color: var(--gold);
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            -moz-appearance: textfield;
+            touch-action: manipulation;
+        }
+        
+        .cell-input::-webkit-outer-spin-button,
+        .cell-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cell-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(240, 180, 41, 0.3);
+        }
+
+        .cell-input:hover:not(.disabled-look) {
+            border-color: var(--gold-highlight);
+            transform: scale(1.05);
+        }
+
+        .cell-input.filled {
+            background-color: rgba(240, 180, 41, 0.1);
+            border-color: var(--gold-dim);
+        }
+
+        .cell-input.disabled-look {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .cell-input.recommended {
+            animation: pulse-recommend 1.5s infinite;
+            border-color: var(--cyan) !important;
+            box-shadow: 0 0 15px rgba(57, 211, 83, 0.4);
+        }
+
+        @keyframes pulse-recommend {
+            0%, 100% { box-shadow: 0 0 15px rgba(57, 211, 83, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(57, 211, 83, 0.6); }
+        }
+
+        .cell-input.error-shake {
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 結果標籤 */
+        .result-tag {
+            font-size: 13px;
+            color: var(--text-muted);
+            padding: 6px 8px;
+            min-width: 55px;
+            text-align: center;
+            border-radius: 6px;
+            background: var(--panel-bg-light);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .result-tag.highlight {
+            background: var(--gradient-gold);
+            color: #000;
+            font-weight: bold;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(240, 180, 41, 0.5);
+        }
+
+        .result-tag.arrow-only {
+            background: transparent;
+            font-family: sans-serif;
+        }
+
+        .arrow { 
+            color: var(--gold-dim); 
+            font-size: 20px;
+        }
+
+        /* 按鈕區 */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .btn-reset {
+            background-color: var(--panel-bg-light);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-reset:hover { 
+            background-color: var(--border-color); 
+        }
+
+        .btn-undo {
+            background-color: var(--info-color);
+            color: #000;
+        }
+
+        .btn-undo:hover {
+            background-color: #79b8ff;
+        }
+
+        .btn-undo:disabled {
+            background-color: var(--panel-bg-light);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 揭格建議面板 */
+        .suggestion-panel {
+            min-width: 280px;
+        }
+
+        .suggestion-content {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .suggestion-highlight {
+            color: var(--cyan);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .suggestion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .suggestion-cell {
+            background: var(--panel-bg-light);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        .suggestion-cell.best {
+            border-color: var(--cyan);
+            background: rgba(57, 211, 83, 0.1);
+        }
+
+        .suggestion-cell .ev-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .suggestion-cell.best .ev-value {
+            color: var(--cyan);
+        }
+
+        .suggestion-cell.disabled {
+            opacity: 0.3;
+        }
+
+        /* 線路分析面板 */
+        .line-analysis {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .line-row {
+            display: grid;
+            grid-template-columns: 70px 80px 1fr 100px;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--panel-bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        .line-row.best {
+            border-color: var(--gold);
+            background: rgba(240, 180, 41, 0.05);
+        }
+
+        .line-row.safest {
+            border-color: var(--cyan);
+        }
+
+        .line-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .line-ev {
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .line-row.best .line-ev {
+            color: var(--gold-highlight);
+        }
+
+        .prob-bar-container {
+            display: flex;
+            gap: 2px;
+            height: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--input-bg);
+        }
+
+        .prob-segment {
+            height: 100%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .prob-segment.jackpot { background: var(--gold); }
+        .prob-segment.high { background: var(--purple); }
+        .prob-segment.medium { background: var(--info-color); }
+        .prob-segment.low { background: var(--border-color); }
+
+        .risk-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .risk-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .risk-badge.low-risk {
+            background: rgba(57, 211, 83, 0.2);
+            color: var(--cyan);
+        }
+
+        .risk-badge.medium-risk {
+            background: rgba(247, 129, 102, 0.2);
+            color: var(--orange);
+        }
+
+        .risk-badge.high-risk {
+            background: rgba(248, 81, 73, 0.2);
+            color: var(--error-color);
+        }
+
+        /* 圖例 */
+        .legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-dot.jackpot { background: var(--gold); }
+        .legend-dot.high { background: var(--purple); }
+        .legend-dot.medium { background: var(--info-color); }
+        .legend-dot.low { background: var(--border-color); }
+
+        /* 獎勵表 */
+        .payout-section {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .payout-table {
+            border-collapse: collapse;
+            font-size: 12px;
+            flex: 1;
+        }
+        
+        .payout-table th, .payout-table td {
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            text-align: center;
+        }
+        
+        .payout-table th { 
+            background-color: var(--panel-bg-light); 
+            color: var(--gold);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        
+        .row-jackpot { 
+            background-color: rgba(240, 180, 41, 0.15);
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .row-high {
+            background-color: rgba(163, 113, 247, 0.1);
+        }
+
+        /* 模式切換 */
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .mode-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            background: var(--panel-bg-light);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+
+        .mode-btn:hover:not(.active) {
+            border-color: var(--gold-dim);
+            color: var(--text-color);
+        }
+
+        /* 統計摘要 */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--panel-bg-light);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .stat-value.green { color: var(--cyan); }
+        .stat-value.purple { color: var(--purple); }
+
+        /* 響應式設計 */
+        @media (max-width: 1100px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .right-section {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cell-input {
+                width: 52px;
+                height: 52px;
+                font-size: 22px;
+            }
+
+            .grid-wrapper {
+                gap: 6px;
+            }
+
+            .result-tag {
+                font-size: 11px;
+                min-width: 45px;
+                padding: 4px 6px;
+            }
+
+            .line-row {
+                grid-template-columns: 60px 70px 1fr;
+            }
+
+            .risk-indicator {
+                display: none;
+            }
+
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .payout-section {
+                flex-direction: column;
+            }
+        }
+
+        /* 提示文字 */
+        .hint-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .phase-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: var(--panel-bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .phase-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gold);
+        }
+
+        .phase-indicator.picking .phase-dot { background: var(--cyan); }
+        .phase-indicator.choosing .phase-dot { background: var(--purple); }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <h1>仙人微彩計算器</h1>
+    <p class="subtitle">進階版 - 揭格建議 / 概率分析 / 風險評估</p>
+    
+    <div class="phase-indicator" :class="currentPhase">
+        <span class="phase-dot"></span>
+        <span>{{ phaseText }}</span>
+    </div>
+    
+    <div class="status-bar" :class="messageType">{{ message }}</div>
+
+    <div class="main-container">
+        <!-- 左側：計算器 + 獎勵表 -->
+        <div class="left-section">
+            <div class="panel calculator-panel">
+                <div class="grid-wrapper">
+                    <!-- 第一行 -->
+                    <div class="result-tag" :class="{ highlight: isBest('diag-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('diag-1') }}</div>
+                    <div class="result-tag" :class="{ highlight: isBest('col-0'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-0') }}</div>
+                    <div class="result-tag" :class="{ highlight: isBest('col-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-1') }}</div>
+                    <div class="result-tag" :class="{ highlight: isBest('col-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-2') }}</div>
+                    <div class="result-tag" :class="{ highlight: isBest('diag-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('diag-2') }}</div>
+
+                    <!-- 第二行 -->
+                    <div class="result-tag" :class="{ highlight: isBest('row-0'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-0') }}</div>
+                    <template v-for="i in [0, 1, 2]">
+                        <input 
+                            type="text" 
+                            inputmode="numeric"
+                            pattern="[1-9]"
+                            maxlength="1"
+                            class="cell-input" 
+                            :class="{ 
+                                'filled': cells[i] !== '', 
+                                'disabled-look': isInputDisabled(i),
+                                'error-shake': errorCell === i,
+                                'recommended': isRecommendedCell(i)
+                            }"
+                            :id="'cell-' + i"
+                            :value="cells[i]"
+                            :disabled="isInputDisabled(i)"
+                            :aria-label="'格子 ' + (i + 1)"
+                            @click="handleCellClick(i)"
+                            @input="handleInput(i, $event)"
+                            @keydown="handleKeyDown(i, $event)"
+                            @focus="$event.target.select()">
+                    </template>
+                    <div class="arrow"></div>
+
+                    <!-- 第三行 -->
+                    <div class="result-tag" :class="{ highlight: isBest('row-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-1') }}</div>
+                    <template v-for="i in [3, 4, 5]">
+                        <input 
+                            type="text" 
+                            inputmode="numeric"
+                            pattern="[1-9]"
+                            maxlength="1"
+                            class="cell-input" 
+                            :class="{ 
+                                'filled': cells[i] !== '', 
+                                'disabled-look': isInputDisabled(i),
+                                'error-shake': errorCell === i,
+                                'recommended': isRecommendedCell(i)
+                            }"
+                            :id="'cell-' + i"
+                            :value="cells[i]"
+                            :disabled="isInputDisabled(i)"
+                            :aria-label="'格子 ' + (i + 1)"
+                            @click="handleCellClick(i)"
+                            @input="handleInput(i, $event)"
+                            @keydown="handleKeyDown(i, $event)"
+                            @focus="$event.target.select()">
+                    </template>
+                    <div class="arrow"></div>
+
+                    <!-- 第四行 -->
+                    <div class="result-tag" :class="{ highlight: isBest('row-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-2') }}</div>
+                    <template v-for="i in [6, 7, 8]">
+                        <input 
+                            type="text" 
+                            inputmode="numeric"
+                            pattern="[1-9]"
+                            maxlength="1"
+                            class="cell-input" 
+                            :class="{ 
+                                'filled': cells[i] !== '', 
+                                'disabled-look': isInputDisabled(i),
+                                'error-shake': errorCell === i,
+                                'recommended': isRecommendedCell(i)
+                            }"
+                            :id="'cell-' + i"
+                            :value="cells[i]"
+                            :disabled="isInputDisabled(i)"
+                            :aria-label="'格子 ' + (i + 1)"
+                            @click="handleCellClick(i)"
+                            @input="handleInput(i, $event)"
+                            @keydown="handleKeyDown(i, $event)"
+                            @focus="$event.target.select()">
+                    </template>
+                    <div class="arrow"></div>
+
+                    <!-- 第五行 -->
+                    <div></div>
+                    <div class="arrow"></div>
+                    <div class="arrow"></div>
+                    <div class="arrow"></div>
+                    <div></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-undo" @click="undo" :disabled="history.length === 0">
+                        ↶ 撤銷
+                    </button>
+                    <button class="btn btn-reset" @click="resetGrid">
+                        重置盤面
+                    </button>
+                </div>
+
+                <p class="hint-text">點擊已填數字可清除 | 方向鍵導航 | Ctrl+Z 撤銷</p>
+            </div>
+
+            <!-- 獎勵表 -->
+            <div class="panel">
+                <h3 class="panel-title"><span class="icon">💰</span> 獎勵表</h3>
+                <div class="payout-section">
+                    <table class="payout-table">
+                        <tr><th>總和</th><th>MGP</th></tr>
+                        <tr class="row-jackpot"><td>6</td><td>10,000</td></tr>
+                        <tr><td>7</td><td>36</td></tr>
+                        <tr class="row-high"><td>8</td><td>720</td></tr>
+                        <tr><td>9</td><td>360</td></tr>
+                        <tr><td>10</td><td>80</td></tr>
+                        <tr><td>11</td><td>252</td></tr>
+                        <tr><td>12</td><td>108</td></tr>
+                        <tr><td>13</td><td>72</td></tr>
+                        <tr><td>14</td><td>54</td></tr>
+                    </table>
+                    <table class="payout-table">
+                        <tr><th>總和</th><th>MGP</th></tr>
+                        <tr><td>15</td><td>180</td></tr>
+                        <tr><td>16</td><td>72</td></tr>
+                        <tr><td>17</td><td>180</td></tr>
+                        <tr><td>18</td><td>119</td></tr>
+                        <tr><td>19</td><td>36</td></tr>
+                        <tr><td>20</td><td>306</td></tr>
+                        <tr class="row-high"><td>21</td><td>1,080</td></tr>
+                        <tr><td>22</td><td>144</td></tr>
+                        <tr class="row-high"><td>23</td><td>1,800</td></tr>
+                        <tr class="row-jackpot"><td>24</td><td>3,600</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：分析面板 -->
+        <div class="right-section">
+            <!-- 揭格建議 -->
+            <div class="panel suggestion-panel" v-if="filledCount < 4">
+                <h3 class="panel-title"><span class="icon">🎯</span> 揭格建議</h3>
+                <div class="suggestion-content">
+                    <p v-if="filledCount === 0">
+                        輸入第一個已知數字開始分析
+                    </p>
+                    <template v-else>
+                        <p>
+                            建議揭開位置 <span class="suggestion-highlight">{{ bestRevealCell + 1 }}</span> 號格
+                            <br>
+                            <small style="color: var(--text-muted)">預期後續最佳 EV: {{ bestRevealEV.toLocaleString() }} MGP</small>
+                        </p>
+                        <div class="suggestion-grid">
+                            <div v-for="i in 9" 
+                                 :key="i"
+                                 class="suggestion-cell"
+                                 :class="{ 
+                                     best: (i-1) === bestRevealCell && cells[i-1] === '',
+                                     disabled: cells[i-1] !== ''
+                                 }">
+                                <template v-if="cells[i-1] !== ''">
+                                    <span style="color: var(--gold)">{{ cells[i-1] }}</span>
+                                </template>
+                                <template v-else>
+                                    <span>{{ i }}</span>
+                                    <span class="ev-value">{{ revealAnalysis[i-1] ? revealAnalysis[i-1].toLocaleString() : '-' }}</span>
+                                </template>
+                            </div>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-muted);">
+                            數值表示揭開該格後的預期最佳線 EV
+                        </p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 統計摘要 -->
+            <div class="panel" v-if="filledCount >= 1">
+                <h3 class="panel-title"><span class="icon">📊</span> 統計摘要</h3>
+                <div class="stats-summary">
+                    <div class="stat-card">
+                        <div class="stat-label">最佳期望值</div>
+                        <div class="stat-value">{{ evResults.max.toLocaleString() }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">最低風險線</div>
+                        <div class="stat-value green">{{ safestLine }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">大獎機率</div>
+                        <div class="stat-value purple">{{ (bestJackpotProb * 100).toFixed(1) }}%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 線路分析 -->
+            <div class="panel" v-if="filledCount >= 1">
+                <h3 class="panel-title"><span class="icon">📈</span> 線路分析</h3>
+                
+                <div class="mode-toggle">
+                    <button class="mode-btn" :class="{ active: sortMode === 'ev' }" @click="sortMode = 'ev'">依期望值</button>
+                    <button class="mode-btn" :class="{ active: sortMode === 'risk' }" @click="sortMode = 'risk'">依風險</button>
+                    <button class="mode-btn" :class="{ active: sortMode === 'jackpot' }" @click="sortMode = 'jackpot'">依大獎率</button>
+                </div>
+
+                <div class="line-analysis">
+                    <div v-for="line in sortedLineAnalysis" 
+                         :key="line.key"
+                         class="line-row"
+                         :class="{ best: line.isBest, safest: line.isSafest }">
+                        <div class="line-name">{{ line.displayName }}</div>
+                        <div class="line-ev">{{ line.ev.toLocaleString() }}</div>
+                        <div class="prob-bar-container" :title="getProbTooltip(line)">
+                            <div class="prob-segment jackpot" :style="{ width: (line.jackpotProb * 100) + '%' }"></div>
+                            <div class="prob-segment high" :style="{ width: (line.highProb * 100) + '%' }"></div>
+                            <div class="prob-segment medium" :style="{ width: (line.mediumProb * 100) + '%' }"></div>
+                            <div class="prob-segment low" :style="{ width: (line.lowProb * 100) + '%' }"></div>
+                        </div>
+                        <div class="risk-indicator">
+                            <span class="risk-badge" :class="line.riskClass">{{ line.riskLabel }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item"><span class="legend-dot jackpot"></span> 大獎 (6,24)</div>
+                    <div class="legend-item"><span class="legend-dot high"></span> 高額 (21,23)</div>
+                    <div class="legend-item"><span class="legend-dot medium"></span> 中等 (8,20)</div>
+                    <div class="legend-item"><span class="legend-dot low"></span> 其他</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            cells: Array(9).fill(''),
+            message: '',
+            messageType: '',
+            errorCell: null,
+            history: [],
+            sortMode: 'ev',
+            payouts: {
+                6: 10000, 7: 36, 8: 720, 9: 360, 10: 80,
+                11: 252, 12: 108, 13: 72, 14: 54, 15: 180,
+                16: 72, 17: 180, 18: 119, 19: 36, 20: 306,
+                21: 1080, 22: 144, 23: 1800, 24: 3600
+            },
+            lines: {
+                "row-0": [0, 1, 2], "row-1": [3, 4, 5], "row-2": [6, 7, 8],
+                "col-0": [0, 3, 6], "col-1": [1, 4, 7], "col-2": [2, 5, 8],
+                "diag-1": [0, 4, 8], "diag-2": [2, 4, 6]
+            },
+            lineNames: {
+                "row-0": "橫列 1", "row-1": "橫列 2", "row-2": "橫列 3",
+                "col-0": "直行 1", "col-1": "直行 2", "col-2": "直行 3",
+                "diag-1": "對角 ↘", "diag-2": "對角 ↙"
+            },
+            // 獎勵分類
+            jackpotSums: [6, 24],      // 大獎
+            highSums: [21, 23],        // 高額
+            mediumSums: [8, 20],       // 中等
+        },
+        computed: {
+            filledCount() {
+                return this.cells.filter(c => c !== '').length;
+            },
+
+            currentPhase() {
+                if (this.filledCount < 4) return 'picking';
+                return 'choosing';
+            },
+
+            phaseText() {
+                if (this.filledCount === 0) return '等待輸入...';
+                if (this.filledCount < 4) return `揭格階段 (${this.filledCount}/4)`;
+                return '選線階段 - 查看金色高亮';
+            },
+
+            usedNums() {
+                return this.cells.filter(c => c !== '').map(Number);
+            },
+
+            availableNums() {
+                return [1,2,3,4,5,6,7,8,9].filter(n => !this.usedNums.includes(n));
+            },
+
+            // 計算所有線的期望值和詳細分析
+            evResults() {
+                let results = {};
+                let max = -1;
+
+                for (let [key, indices] of Object.entries(this.lines)) {
+                    const analysis = this.analyzeLineDetailed(indices);
+                    results[key] = analysis;
+                    if (analysis.ev > max) max = analysis.ev;
+                }
+                
+                return { values: results, max: max };
+            },
+
+            // 線路分析陣列
+            lineAnalysis() {
+                const analysis = [];
+                const minStdDev = Math.min(...Object.values(this.evResults.values).map(v => v.stdDev));
+                
+                for (let [key, data] of Object.entries(this.evResults.values)) {
+                    analysis.push({
+                        key: key,
+                        displayName: this.lineNames[key],
+                        ev: data.ev,
+                        stdDev: data.stdDev,
+                        jackpotProb: data.jackpotProb,
+                        highProb: data.highProb,
+                        mediumProb: data.mediumProb,
+                        lowProb: data.lowProb,
+                        isBest: data.ev === this.evResults.max,
+                        isSafest: data.stdDev === minStdDev,
+                        riskClass: this.getRiskClass(data.stdDev),
+                        riskLabel: this.getRiskLabel(data.stdDev)
+                    });
+                }
+                return analysis;
+            },
+
+            sortedLineAnalysis() {
+                const arr = [...this.lineAnalysis];
+                switch (this.sortMode) {
+                    case 'ev':
+                        return arr.sort((a, b) => b.ev - a.ev);
+                    case 'risk':
+                        return arr.sort((a, b) => a.stdDev - b.stdDev);
+                    case 'jackpot':
+                        return arr.sort((a, b) => (b.jackpotProb + b.highProb) - (a.jackpotProb + a.highProb));
+                    default:
+                        return arr;
+                }
+            },
+
+            safestLine() {
+                const safest = this.lineAnalysis.find(l => l.isSafest);
+                return safest ? safest.displayName : '-';
+            },
+
+            bestJackpotProb() {
+                return Math.max(...this.lineAnalysis.map(l => l.jackpotProb + l.highProb));
+            },
+
+            // 揭格分析
+            revealAnalysis() {
+                if (this.filledCount === 0 || this.filledCount >= 4) {
+                    return Array(9).fill(null);
+                }
+
+                const results = [];
+                for (let cellIdx = 0; cellIdx < 9; cellIdx++) {
+                    if (this.cells[cellIdx] !== '') {
+                        results.push(null);
+                        continue;
+                    }
+                    results.push(this.calculateRevealEV(cellIdx));
+                }
+                return results;
+            },
+
+            bestRevealCell() {
+                let bestIdx = -1;
+                let bestEV = -1;
+                this.revealAnalysis.forEach((ev, idx) => {
+                    if (ev !== null && ev > bestEV) {
+                        bestEV = ev;
+                        bestIdx = idx;
+                    }
+                });
+                return bestIdx;
+            },
+
+            bestRevealEV() {
+                const best = this.revealAnalysis[this.bestRevealCell];
+                return best || 0;
+            }
+        },
+        mounted() {
+            document.addEventListener('keydown', this.handleGlobalKeyDown);
+        },
+        beforeDestroy() {
+            document.removeEventListener('keydown', this.handleGlobalKeyDown);
+        },
+        methods: {
+            // 詳細分析一條線
+            analyzeLineDetailed(indices) {
+                let currentSum = 0;
+                let missingIndices = [];
+
+                indices.forEach(idx => {
+                    if (this.cells[idx] !== '') {
+                        currentSum += parseInt(this.cells[idx]);
+                    } else {
+                        missingIndices.push(idx);
+                    }
+                });
+
+                let totalPayout = 0;
+                let permutationCount = 0;
+                let payoutSquaredSum = 0;
+                let jackpotCount = 0;
+                let highCount = 0;
+                let mediumCount = 0;
+
+                if (missingIndices.length === 0) {
+                    const payout = this.payouts[currentSum] || 0;
+                    return {
+                        ev: payout,
+                        stdDev: 0,
+                        jackpotProb: this.jackpotSums.includes(currentSum) ? 1 : 0,
+                        highProb: this.highSums.includes(currentSum) ? 1 : 0,
+                        mediumProb: this.mediumSums.includes(currentSum) ? 1 : 0,
+                        lowProb: (!this.jackpotSums.includes(currentSum) && 
+                                  !this.highSums.includes(currentSum) && 
+                                  !this.mediumSums.includes(currentSum)) ? 1 : 0
+                    };
+                }
+
+                const perms = this.getPermutations(this.availableNums, missingIndices.length);
+                perms.forEach(perm => {
+                    const sum = currentSum + perm.reduce((a,b) => a+b, 0);
+                    const payout = this.payouts[sum] || 0;
+                    totalPayout += payout;
+                    payoutSquaredSum += payout * payout;
+                    permutationCount++;
+
+                    if (this.jackpotSums.includes(sum)) jackpotCount++;
+                    else if (this.highSums.includes(sum)) highCount++;
+                    else if (this.mediumSums.includes(sum)) mediumCount++;
+                });
+
+                const ev = permutationCount === 0 ? 0 : Math.round(totalPayout / permutationCount);
+                const meanSquared = (totalPayout / permutationCount) ** 2;
+                const variance = (payoutSquaredSum / permutationCount) - meanSquared;
+                const stdDev = Math.sqrt(Math.max(0, variance));
+
+                return {
+                    ev: ev,
+                    stdDev: Math.round(stdDev),
+                    jackpotProb: jackpotCount / permutationCount,
+                    highProb: highCount / permutationCount,
+                    mediumProb: mediumCount / permutationCount,
+                    lowProb: (permutationCount - jackpotCount - highCount - mediumCount) / permutationCount
+                };
+            },
+
+            // 計算揭開某格後的預期最佳 EV
+            calculateRevealEV(cellIdx) {
+                let totalBestEV = 0;
+                let count = 0;
+
+                // 對每個可能出現的數字
+                this.availableNums.forEach(num => {
+                    // 暫時設置這個格子的值
+                    const tempCells = [...this.cells];
+                    tempCells[cellIdx] = num.toString();
+                    
+                    // 計算這種情況下所有線的 EV
+                    const tempUsed = tempCells.filter(c => c !== '').map(Number);
+                    const tempAvailable = [1,2,3,4,5,6,7,8,9].filter(n => !tempUsed.includes(n));
+                    
+                    let maxEV = 0;
+                    for (let [key, indices] of Object.entries(this.lines)) {
+                        const ev = this.calculateLineEV(tempCells, indices, tempAvailable);
+                        if (ev > maxEV) maxEV = ev;
+                    }
+                    
+                    totalBestEV += maxEV;
+                    count++;
+                });
+
+                return count === 0 ? 0 : Math.round(totalBestEV / count);
+            },
+
+            // 計算特定盤面下一條線的 EV
+            calculateLineEV(cells, indices, available) {
+                let currentSum = 0;
+                let missingCount = 0;
+
+                indices.forEach(idx => {
+                    if (cells[idx] !== '') {
+                        currentSum += parseInt(cells[idx]);
+                    } else {
+                        missingCount++;
+                    }
+                });
+
+                if (missingCount === 0) {
+                    return this.payouts[currentSum] || 0;
+                }
+
+                const perms = this.getPermutations(available, missingCount);
+                let totalPayout = 0;
+                perms.forEach(perm => {
+                    const sum = currentSum + perm.reduce((a,b) => a+b, 0);
+                    totalPayout += this.payouts[sum] || 0;
+                });
+
+                return perms.length === 0 ? 0 : Math.round(totalPayout / perms.length);
+            },
+
+            getPermutations(arr, k) {
+                if (k === 0) return [[]];
+                if (arr.length === 0) return [];
+                
+                let result = [];
+                for (let i = 0; i < arr.length; i++) {
+                    const current = arr[i];
+                    const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+                    const perms = this.getPermutations(remaining, k - 1);
+                    perms.forEach(perm => {
+                        result.push([current, ...perm]);
+                    });
+                }
+                return result;
+            },
+
+            getRiskClass(stdDev) {
+                if (stdDev < 500) return 'low-risk';
+                if (stdDev < 1500) return 'medium-risk';
+                return 'high-risk';
+            },
+
+            getRiskLabel(stdDev) {
+                if (stdDev < 500) return '穩定';
+                if (stdDev < 1500) return '中等';
+                return '高風險';
+            },
+
+            getProbTooltip(line) {
+                return `大獎: ${(line.jackpotProb * 100).toFixed(1)}% | ` +
+                       `高額: ${(line.highProb * 100).toFixed(1)}% | ` +
+                       `中等: ${(line.mediumProb * 100).toFixed(1)}%`;
+            },
+
+            handleCellClick(index) {
+                if (this.cells[index] !== '') {
+                    this.saveHistory();
+                    this.$set(this.cells, index, '');
+                    this.clearMessage();
+                    this.$nextTick(() => document.getElementById('cell-' + index).focus());
+                }
+            },
+            
+            handleInput(index, event) {
+                const val = event.target.value.trim();
+                this.clearMessage();
+
+                if (val === '') {
+                    this.saveHistory();
+                    this.$set(this.cells, index, '');
+                    return;
+                }
+
+                const char = val[0];
+                const num = parseInt(char);
+
+                if (isNaN(num) || num < 1 || num > 9) {
+                    this.showError(`請輸入 1-9 的數字`, index);
+                    this.forceUpdateCell(index, '');
+                    return;
+                }
+
+                const isDuplicate = this.cells.some((c, i) => i !== index && parseInt(c) === num);
+                if (isDuplicate) {
+                    this.showError(`數字 ${num} 已經存在！`, index);
+                    this.forceUpdateCell(index, '');
+                    return;
+                }
+
+                if (this.cells[index] === '' && this.filledCount >= 4) {
+                    this.showError("最多只能輸入 4 個已知數字", index);
+                    this.forceUpdateCell(index, '');
+                    return;
+                }
+
+                if (this.cells[index] === '') {
+                    this.saveHistory();
+                }
+
+                this.$set(this.cells, index, num.toString());
+                
+                if (this.filledCount < 4) {
+                    this.$nextTick(() => this.focusNext(index));
+                } else {
+                    this.showSuccess('已輸入 4 個數字，查看金色高亮的最佳選擇！');
+                }
+            },
+
+            handleKeyDown(index, event) {
+                if (event.key === 'Backspace' && this.cells[index] === '') {
+                    this.focusPrevious(index);
+                }
+                else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    this.focusNext(index);
+                }
+                else if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    this.focusNext(index);
+                }
+                else if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    this.focusPrevious(index);
+                }
+                else if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    const nextIndex = index + 3;
+                    if (nextIndex < 9) {
+                        document.getElementById('cell-' + nextIndex).focus();
+                    }
+                }
+                else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    const prevIndex = index - 3;
+                    if (prevIndex >= 0) {
+                        document.getElementById('cell-' + prevIndex).focus();
+                    }
+                }
+            },
+
+            handleGlobalKeyDown(event) {
+                if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+                    event.preventDefault();
+                    this.undo();
+                }
+            },
+
+            forceUpdateCell(index, val) {
+                this.$set(this.cells, index, val);
+                event.target.value = val; 
+            },
+
+            focusNext(currentIndex) {
+                for (let i = 1; i < 9; i++) {
+                    let nextIndex = (currentIndex + i) % 9;
+                    if (!this.isInputDisabled(nextIndex)) {
+                        document.getElementById('cell-' + nextIndex).focus();
+                        break;
+                    }
+                }
+            },
+
+            focusPrevious(currentIndex) {
+                for (let i = 1; i < 9; i++) {
+                    let prevIndex = (currentIndex - i + 9) % 9;
+                    if (!this.isInputDisabled(prevIndex)) {
+                        document.getElementById('cell-' + prevIndex).focus();
+                        break;
+                    }
+                }
+            },
+
+            resetGrid() {
+                this.cells = Array(9).fill('');
+                this.history = [];
+                this.clearMessage();
+            },
+
+            saveHistory() {
+                this.history.push([...this.cells]);
+                if (this.history.length > 20) {
+                    this.history.shift();
+                }
+            },
+
+            undo() {
+                if (this.history.length > 0) {
+                    this.cells = this.history.pop();
+                    this.showSuccess('已撤銷');
+                }
+            },
+
+            showError(msg, cellIndex = null) {
+                this.message = msg;
+                this.messageType = 'error';
+                if (cellIndex !== null) {
+                    this.errorCell = cellIndex;
+                    setTimeout(() => { this.errorCell = null; }, 300);
+                }
+            },
+
+            showSuccess(msg) {
+                this.message = msg;
+                this.messageType = 'success';
+            },
+
+            showInfo(msg) {
+                this.message = msg;
+                this.messageType = 'info';
+            },
+
+            clearMessage() {
+                this.message = '';
+                this.messageType = '';
+            },
+
+            displayEV(key) {
+                const data = this.evResults.values[key];
+                const arrows = {
+                    'diag-1': '↘', 'diag-2': '↙',
+                    'col-0': '↓', 'col-1': '↓', 'col-2': '↓',
+                    'row-0': '→', 'row-1': '→', 'row-2': '→'
+                };
+                if (this.filledCount === 0) return arrows[key];
+                return data.ev.toLocaleString();
+            },
+
+            isBest(key) {
+                if (this.filledCount === 0) return false;
+                return this.evResults.values[key].ev === this.evResults.max;
+            },
+
+            isInputDisabled(index) {
+                return this.cells[index] === '' && this.filledCount >= 4;
+            },
+
+            isRecommendedCell(index) {
+                if (this.filledCount === 0 || this.filledCount >= 4) return false;
+                return index === this.bestRevealCell && this.cells[index] === '';
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
