@@ -187,16 +187,15 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
-            -moz-appearance: textfield;
             touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        .cell-input::-webkit-outer-spin-button,
-        .cell-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
         .cell-input:focus {
             outline: none;
             border-color: var(--gold);
@@ -670,6 +669,94 @@
 
         .phase-indicator.picking .phase-dot { background: var(--cyan); }
         .phase-indicator.choosing .phase-dot { background: var(--purple); }
+
+        /* 數字選擇 Modal */
+        .number-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .number-modal.show {
+            display: flex;
+        }
+
+        .number-grid {
+            background: var(--panel-bg);
+            padding: 24px;
+            border-radius: 16px;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 40px rgba(240, 180, 41, 0.3);
+        }
+
+        .number-grid h4 {
+            text-align: center;
+            margin: 0 0 16px 0;
+            color: var(--gold);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .number-options {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            gap: 10px;
+        }
+
+        .number-btn {
+            width: 70px;
+            height: 70px;
+            font-size: 28px;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: var(--panel-bg-light);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            transition: all 0.2s;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .number-btn:hover:not(:disabled) {
+            background: var(--gold);
+            color: #000;
+            transform: scale(1.1);
+            border-color: var(--gold);
+        }
+
+        .number-btn:disabled {
+            background: var(--input-bg);
+            color: var(--border-color);
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        .number-btn.cancel-btn {
+            grid-column: span 3;
+            width: 100%;
+            height: 50px;
+            font-size: 16px;
+            background: var(--panel-bg-light);
+            margin-top: 10px;
+            color: var(--text-muted);
+            border-radius: 8px;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .number-btn.cancel-btn:hover {
+            background: var(--border-color);
+            color: var(--text-color);
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -700,11 +787,7 @@
                     <!-- 第二行 -->
                     <div class="result-tag" :class="{ highlight: isBest('row-0'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-0') }}</div>
                     <template v-for="i in [0, 1, 2]">
-                        <input 
-                            type="text" 
-                            inputmode="numeric"
-                            pattern="[1-9]"
-                            maxlength="1"
+                        <div 
                             class="cell-input" 
                             :class="{ 
                                 'filled': cells[i] !== '', 
@@ -713,24 +796,19 @@
                                 'recommended': isRecommendedCell(i)
                             }"
                             :id="'cell-' + i"
-                            :value="cells[i]"
-                            :disabled="isInputDisabled(i)"
                             :aria-label="'格子 ' + (i + 1)"
                             @click="handleCellClick(i)"
-                            @input="handleInput(i, $event)"
-                            @keydown="handleKeyDown(i, $event)"
-                            @focus="$event.target.select()">
+                            tabindex="0"
+                            @keydown="handleKeyDown(i, $event)">
+                            {{ cells[i] }}
+                        </div>
                     </template>
                     <div class="arrow"></div>
 
                     <!-- 第三行 -->
                     <div class="result-tag" :class="{ highlight: isBest('row-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-1') }}</div>
                     <template v-for="i in [3, 4, 5]">
-                        <input 
-                            type="text" 
-                            inputmode="numeric"
-                            pattern="[1-9]"
-                            maxlength="1"
+                        <div 
                             class="cell-input" 
                             :class="{ 
                                 'filled': cells[i] !== '', 
@@ -739,24 +817,19 @@
                                 'recommended': isRecommendedCell(i)
                             }"
                             :id="'cell-' + i"
-                            :value="cells[i]"
-                            :disabled="isInputDisabled(i)"
                             :aria-label="'格子 ' + (i + 1)"
                             @click="handleCellClick(i)"
-                            @input="handleInput(i, $event)"
-                            @keydown="handleKeyDown(i, $event)"
-                            @focus="$event.target.select()">
+                            tabindex="0"
+                            @keydown="handleKeyDown(i, $event)">
+                            {{ cells[i] }}
+                        </div>
                     </template>
                     <div class="arrow"></div>
 
                     <!-- 第四行 -->
                     <div class="result-tag" :class="{ highlight: isBest('row-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-2') }}</div>
                     <template v-for="i in [6, 7, 8]">
-                        <input 
-                            type="text" 
-                            inputmode="numeric"
-                            pattern="[1-9]"
-                            maxlength="1"
+                        <div 
                             class="cell-input" 
                             :class="{ 
                                 'filled': cells[i] !== '', 
@@ -765,13 +838,12 @@
                                 'recommended': isRecommendedCell(i)
                             }"
                             :id="'cell-' + i"
-                            :value="cells[i]"
-                            :disabled="isInputDisabled(i)"
                             :aria-label="'格子 ' + (i + 1)"
                             @click="handleCellClick(i)"
-                            @input="handleInput(i, $event)"
-                            @keydown="handleKeyDown(i, $event)"
-                            @focus="$event.target.select()">
+                            tabindex="0"
+                            @keydown="handleKeyDown(i, $event)">
+                            {{ cells[i] }}
+                        </div>
                     </template>
                     <div class="arrow"></div>
 
@@ -792,7 +864,7 @@
                     </button>
                 </div>
 
-                <p class="hint-text">點擊已填數字可清除 | 方向鍵導航 | Ctrl+Z 撤銷</p>
+                <p class="hint-text">點擊格子選擇數字 | 再次點擊可清除 | Ctrl+Z 撤銷</p>
             </div>
 
             <!-- 獎勵表 -->
@@ -926,6 +998,26 @@
     </div>
 </div>
 
+<!-- 數字選擇 Modal -->
+<div class="number-modal" id="number-modal" @click.self="hideNumberModal">
+    <div class="number-grid">
+        <h4>選擇數字</h4>
+        <div class="number-options">
+            <button 
+                v-for="n in 9" 
+                :key="n"
+                class="number-btn"
+                :disabled="usedNums.includes(n)"
+                @click="selectNumber(n)">
+                {{ n }}
+            </button>
+            <button class="number-btn cancel-btn" @click="hideNumberModal">取消</button>
+        </div>
+    </div>
+</div>
+
+</div>
+
 <script>
     new Vue({
         el: '#app',
@@ -936,6 +1028,8 @@
             errorCell: null,
             history: [],
             sortMode: 'ev',
+            selectedCell: null,  // 當前選擇的格子索引
+            showModal: false,    // Modal 顯示狀態
             payouts: {
                 6: 10000, 7: 36, 8: 720, 9: 360, 10: 80,
                 11: 252, 12: 108, 13: 72, 14: 54, 15: 180,
@@ -1236,67 +1330,75 @@
 
             handleCellClick(index) {
                 if (this.cells[index] !== '') {
+                    // 已填入的格子：清除數字
                     this.saveHistory();
                     this.$set(this.cells, index, '');
                     this.clearMessage();
-                    this.$nextTick(() => document.getElementById('cell-' + index).focus());
+                } else if (this.filledCount < 4) {
+                    // 空格子且未滿4個：顯示數字選擇 Modal
+                    this.selectedCell = index;
+                    this.showModal = true;
+                    document.getElementById('number-modal').classList.add('show');
                 }
             },
-            
-            handleInput(index, event) {
-                const val = event.target.value.trim();
-                this.clearMessage();
 
-                if (val === '') {
-                    this.saveHistory();
-                    this.$set(this.cells, index, '');
-                    return;
-                }
+            hideNumberModal() {
+                this.showModal = false;
+                this.selectedCell = null;
+                document.getElementById('number-modal').classList.remove('show');
+            },
 
-                const char = val[0];
-                const num = parseInt(char);
-
-                if (isNaN(num) || num < 1 || num > 9) {
-                    this.showError(`請輸入 1-9 的數字`, index);
-                    this.forceUpdateCell(index, '');
-                    return;
-                }
-
-                const isDuplicate = this.cells.some((c, i) => i !== index && parseInt(c) === num);
-                if (isDuplicate) {
-                    this.showError(`數字 ${num} 已經存在！`, index);
-                    this.forceUpdateCell(index, '');
-                    return;
-                }
-
-                if (this.cells[index] === '' && this.filledCount >= 4) {
-                    this.showError("最多只能輸入 4 個已知數字", index);
-                    this.forceUpdateCell(index, '');
-                    return;
-                }
-
-                if (this.cells[index] === '') {
-                    this.saveHistory();
-                }
-
-                this.$set(this.cells, index, num.toString());
+            selectNumber(num) {
+                if (this.selectedCell === null) return;
+                if (this.usedNums.includes(num)) return;
                 
-                if (this.filledCount < 4) {
-                    this.$nextTick(() => this.focusNext(index));
-                } else {
+                this.saveHistory();
+                this.$set(this.cells, this.selectedCell, num.toString());
+                this.hideNumberModal();
+                
+                if (this.filledCount >= 4) {
                     this.showSuccess('已輸入 4 個數字，查看金色高亮的最佳選擇！');
                 }
             },
 
             handleKeyDown(index, event) {
-                if (event.key === 'Backspace' && this.cells[index] === '') {
-                    this.focusPrevious(index);
-                }
-                else if (event.key === 'Enter') {
+                // 數字鍵 1-9 直接輸入
+                const num = parseInt(event.key);
+                if (num >= 1 && num <= 9) {
                     event.preventDefault();
-                    this.focusNext(index);
+                    if (this.cells[index] !== '' || this.filledCount >= 4) return;
+                    if (this.usedNums.includes(num)) {
+                        this.showError(`數字 ${num} 已經存在！`, index);
+                        return;
+                    }
+                    this.saveHistory();
+                    this.$set(this.cells, index, num.toString());
+                    if (this.filledCount >= 4) {
+                        this.showSuccess('已輸入 4 個數字，查看金色高亮的最佳選擇！');
+                    }
+                    return;
                 }
-                else if (event.key === 'ArrowRight') {
+
+                // Backspace/Delete 清除
+                if (event.key === 'Backspace' || event.key === 'Delete') {
+                    event.preventDefault();
+                    if (this.cells[index] !== '') {
+                        this.saveHistory();
+                        this.$set(this.cells, index, '');
+                        this.clearMessage();
+                    }
+                    return;
+                }
+
+                // Enter/Space 開啟 Modal
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    this.handleCellClick(index);
+                    return;
+                }
+
+                // 方向鍵導航
+                if (event.key === 'ArrowRight') {
                     event.preventDefault();
                     this.focusNext(index);
                 }
@@ -1325,18 +1427,18 @@
                     event.preventDefault();
                     this.undo();
                 }
-            },
-
-            forceUpdateCell(index, val) {
-                this.$set(this.cells, index, val);
-                event.target.value = val; 
+                // Escape 關閉 Modal
+                if (event.key === 'Escape' && this.showModal) {
+                    this.hideNumberModal();
+                }
             },
 
             focusNext(currentIndex) {
                 for (let i = 1; i < 9; i++) {
                     let nextIndex = (currentIndex + i) % 9;
-                    if (!this.isInputDisabled(nextIndex)) {
-                        document.getElementById('cell-' + nextIndex).focus();
+                    const el = document.getElementById('cell-' + nextIndex);
+                    if (el && !el.classList.contains('disabled-look')) {
+                        el.focus();
                         break;
                     }
                 }
@@ -1345,8 +1447,9 @@
             focusPrevious(currentIndex) {
                 for (let i = 1; i < 9; i++) {
                     let prevIndex = (currentIndex - i + 9) % 9;
-                    if (!this.isInputDisabled(prevIndex)) {
-                        document.getElementById('cell-' + prevIndex).focus();
+                    const el = document.getElementById('cell-' + prevIndex);
+                    if (el && !el.classList.contains('disabled-look')) {
+                        el.focus();
                         break;
                     }
                 }
