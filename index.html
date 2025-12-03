@@ -51,7 +51,7 @@
                 radial-gradient(ellipse at bottom right, rgba(163, 113, 247, 0.03) 0%, transparent 50%);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             min-height: 100vh;
         }
 
@@ -62,23 +62,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 24px;
+            gap: 12px;
         }
 
         h1 {
             font-family: 'Orbitron', sans-serif;
             color: var(--gold);
             margin: 0;
-            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-size: clamp(1.3rem, 3.5vw, 1.8rem);
             text-align: center;
             letter-spacing: 2px;
-            text-shadow: 0 0 30px rgba(240, 180, 41, 0.3);
+            text-shadow: 0 0 20px rgba(240, 180, 41, 0.3);
         }
 
         .subtitle {
             color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 8px;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 10px;
         }
 
         .status-bar {
@@ -110,25 +111,91 @@
             background: transparent;
         }
 
-        /* 主容器佈局 */
-        .main-container {
-            display: grid;
-            grid-template-columns: auto 1fr;
+        /* 主容器佈局 - 響應式 */
+        .page-layout {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
             gap: 30px;
+            flex-wrap: wrap;
             width: 100%;
-            align-items: start;
+            max-width: 900px;
         }
 
-        .left-section {
+        .game-area {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            align-items: center;
         }
 
-        .right-section {
+        .main-container {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* 右側獎勵表區域 */
+        .right-area {
+            display: none;
+            flex-direction: column;
+            width: 200px;
+            padding-top: 0;
+            gap: 16px;
+        }
+
+        @media (min-width: 700px) {
+            .right-area {
+                display: flex;
+            }
+        }
+
+        /* 分析區域 - 摺疊式 */
+        .analysis-section {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 16px;
+        }
+
+        .analysis-toggle {
+            width: 100%;
+            padding: 12px 20px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+        }
+
+        .analysis-toggle:hover {
+            border-color: var(--gold-dim);
+            color: var(--text-color);
+        }
+
+        .analysis-toggle .toggle-icon {
+            transition: transform 0.3s;
+        }
+
+        .analysis-toggle.expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .analysis-content {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            padding-top: 16px;
+        }
+
+        .analysis-content.show {
+            display: flex;
         }
 
         /* 面板通用樣式 */
@@ -218,14 +285,37 @@
         }
 
         .cell-input.recommended {
+            border-color: #7fff7f !important;
+            box-shadow: 0 0 15px #4a9f4a, inset 0 0 10px rgba(74, 159, 74, 0.3);
             animation: pulse-recommend 1.5s infinite;
-            border-color: var(--cyan) !important;
-            box-shadow: 0 0 15px rgba(57, 211, 83, 0.4);
+            position: relative;
+        }
+
+        .cell-input.recommended::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 2px solid #7fff7f;
+            border-radius: 10px;
+            animation: recommendGlow 1.5s infinite;
+            pointer-events: none;
         }
 
         @keyframes pulse-recommend {
-            0%, 100% { box-shadow: 0 0 15px rgba(57, 211, 83, 0.4); }
-            50% { box-shadow: 0 0 25px rgba(57, 211, 83, 0.6); }
+            0%, 100% { 
+                box-shadow: 0 0 15px #4a9f4a, inset 0 0 10px rgba(74, 159, 74, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 25px #7fff7f, inset 0 0 15px rgba(74, 159, 74, 0.5);
+            }
+        }
+
+        @keyframes recommendGlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         .cell-input.error-shake {
@@ -670,6 +760,367 @@
         .phase-indicator.picking .phase-dot { background: var(--cyan); }
         .phase-indicator.choosing .phase-dot { background: var(--purple); }
 
+        /* 步驟指示器 */
+        .step-indicator {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .step {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            background: var(--panel-bg-light);
+            border: 2px solid var(--border-color);
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .step.active {
+            background: var(--gradient-gold);
+            color: #000;
+            border-color: var(--gold);
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(240, 180, 41, 0.4);
+        }
+
+        .step.done {
+            background: linear-gradient(135deg, var(--cyan) 0%, #2d7a2d 100%);
+            border-color: var(--cyan);
+            color: #000;
+        }
+
+        /* 操作指引面板 */
+        .instruction-panel {
+            width: 100%;
+            max-width: 380px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+        }
+
+        .instruction-header {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .instruction-content {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .instruction-content .text-highlight {
+            color: var(--cyan);
+            font-weight: bold;
+        }
+
+        .instruction-content .text-gold {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* 格子顏色區分 */
+        .cell-input.initial-cell {
+            background: linear-gradient(135deg, #8a5a2d 0%, #5a3a1a 100%) !important;
+            border-color: #df9f4a !important;
+        }
+
+        .cell-input.revealed-cell {
+            background: linear-gradient(135deg, #2d5a8a 0%, #1a3a5a 100%) !important;
+            border-color: #4a9fdf !important;
+        }
+
+        .cell-input.best-line-cell {
+            border-color: var(--error-color) !important;
+            box-shadow: 0 0 20px var(--error-color), inset 0 0 25px rgba(248, 81, 73, 0.4) !important;
+            animation: cellPulse 1s infinite !important;
+            position: relative;
+        }
+
+        .cell-input.best-line-cell::before {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 3px solid var(--error-color);
+            border-radius: 55%;
+            animation: cellPulse 1s infinite;
+        }
+
+        @keyframes cellPulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px var(--error-color), inset 0 0 25px rgba(248, 81, 73, 0.4); 
+                border-color: var(--error-color); 
+            }
+            50% { 
+                box-shadow: 0 0 35px #ff6666, inset 0 0 35px rgba(255, 100, 100, 0.5); 
+                border-color: #ff6666; 
+            }
+        }
+
+        @keyframes bestLinePulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(248, 81, 73, 0.5), inset 0 0 15px rgba(248, 81, 73, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(248, 81, 73, 0.7), inset 0 0 20px rgba(248, 81, 73, 0.3); }
+        }
+
+        /* 格子圖例 */
+        .cell-legend {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+        }
+
+        .legend-box.initial {
+            border-color: #df9f4a;
+            background: rgba(138, 90, 45, 0.4);
+        }
+
+        .legend-box.revealed {
+            border-color: #4a9fdf;
+            background: rgba(45, 90, 138, 0.4);
+        }
+
+        .legend-box.recommended {
+            border-color: #7fff7f;
+            box-shadow: 0 0 6px #4a9f4a;
+            background: rgba(74, 159, 74, 0.2);
+        }
+
+        /* 最佳選擇 Banner */
+        .best-choice-banner {
+            padding: 14px;
+            background: linear-gradient(135deg, var(--panel-bg) 0%, #1a1a2a 100%);
+            border-radius: 10px;
+            border: 2px solid var(--error-color);
+            box-shadow: 0 4px 15px rgba(248, 81, 73, 0.2);
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .banner-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+
+        .banner-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .banner-icon {
+            font-size: 24px;
+        }
+
+        .banner-title {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 1px;
+        }
+
+        .banner-line {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .banner-right {
+            text-align: right;
+        }
+
+        .banner-ev-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 1px;
+        }
+
+        .banner-ev-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--gold);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .banner-ev-unit {
+            font-size: 12px;
+            color: var(--gold);
+        }
+
+        .banner-probs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 8px;
+        }
+
+        .prob-tag {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .prob-tag .prob-mgp {
+            color: var(--gold);
+            font-weight: bold;
+            display: block;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .prob-tag .prob-percent {
+            color: var(--text-muted);
+            font-size: 10px;
+        }
+
+        .prob-tag.high-value {
+            background: rgba(240, 180, 41, 0.1);
+            border-color: var(--gold-dim);
+        }
+
+        .prob-tag.jackpot {
+            background: rgba(248, 81, 73, 0.15);
+            border-color: var(--error-color);
+            animation: jackpotGlow 1.5s infinite;
+        }
+
+        @keyframes jackpotGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(248, 81, 73, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(248, 81, 73, 0.5); }
+        }
+
+        /* VS 對決面板 */
+        .vs-container {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .vs-card {
+            flex: 1;
+            background: var(--panel-bg);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .vs-card.risky {
+            background: linear-gradient(180deg, rgba(248, 81, 73, 0.1) 0%, transparent 100%);
+            border: 1px solid var(--error-color);
+        }
+
+        .vs-card.safe {
+            background: linear-gradient(180deg, rgba(88, 166, 255, 0.1) 0%, transparent 100%);
+            border: 1px solid var(--info-color);
+        }
+
+        .vs-icon { font-size: 20px; margin-bottom: 4px; }
+        .vs-title { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+        .vs-card.risky .vs-title { color: var(--error-color); }
+        .vs-card.safe .vs-title { color: var(--info-color); }
+
+        .vs-line-name {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vs-value-box { margin-bottom: 6px; }
+        .vs-label { font-size: 9px; color: var(--text-muted); }
+        .vs-value { font-size: 16px; font-weight: bold; font-family: 'Orbitron', monospace; }
+        .vs-value.gold { color: var(--gold); }
+        .vs-value.blue { color: var(--info-color); }
+        .vs-unit { font-size: 10px; color: var(--text-muted); }
+
+        .vs-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            padding-top: 10px;
+        }
+
+        .vs-badge {
+            font-size: 11px;
+            font-weight: bold;
+            background: var(--text-color);
+            color: var(--bg-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .win-rate-label { font-size: 8px; color: var(--text-muted); margin-bottom: 2px; text-align: center; }
+        .win-rate-val { font-size: 15px; font-weight: bold; color: var(--cyan); font-family: 'Orbitron', monospace; }
+        .win-rate-desc { font-size: 9px; color: var(--text-muted); margin-top: 3px; text-align: center; }
+
+        .vs-probs {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: auto;
+        }
+
+        .vs-prob-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            padding: 2px 5px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .vs-prob-val { color: var(--gold); font-family: 'Orbitron', monospace; }
+        .vs-prob-pct { color: var(--text-muted); }
+
         /* 數字選擇 Modal */
         .number-modal {
             display: none;
@@ -757,120 +1208,220 @@
             color: var(--text-color);
             transform: none;
         }
+
+        /* 右側獎勵表樣式 */
+        .payout-panel-side {
+            background: var(--panel-bg);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .payout-panel-side h3 {
+            color: var(--gold);
+            margin: 0 0 10px 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            font-size: 13px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .payout-section-side {
+            display: flex;
+            gap: 8px;
+        }
+
+        .payout-section-side .payout-table {
+            font-size: 11px;
+        }
+
+        .payout-section-side .payout-table th,
+        .payout-section-side .payout-table td {
+            padding: 4px 6px;
+        }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <h1>仙人微彩計算器</h1>
-    <p class="subtitle">進階版 - 揭格建議 / 概率分析 / 風險評估</p>
+    <h1>🌵 仙人微彩計算器</h1>
     
-    <div class="phase-indicator" :class="currentPhase">
-        <span class="phase-dot"></span>
-        <span>{{ phaseText }}</span>
+    <!-- 步驟指示器 -->
+    <div class="step-indicator">
+        <div class="step" :class="{ active: filledCount === 0, done: filledCount >= 1 }">初</div>
+        <div class="step" :class="{ active: filledCount === 1, done: filledCount >= 2 }">1</div>
+        <div class="step" :class="{ active: filledCount === 2, done: filledCount >= 3 }">2</div>
+        <div class="step" :class="{ active: filledCount === 3, done: filledCount >= 4 }">3</div>
+        <div class="step" :class="{ active: filledCount >= 4 }">選</div>
     </div>
-    
-    <div class="status-bar" :class="messageType">{{ message }}</div>
 
-    <div class="main-container">
-        <!-- 左側：計算器 + 獎勵表 -->
-        <div class="left-section">
-            <div class="panel calculator-panel">
-                <div class="grid-wrapper">
-                    <!-- 第一行 -->
-                    <div class="result-tag" :class="{ highlight: isBest('diag-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('diag-1') }}</div>
-                    <div class="result-tag" :class="{ highlight: isBest('col-0'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-0') }}</div>
-                    <div class="result-tag" :class="{ highlight: isBest('col-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-1') }}</div>
-                    <div class="result-tag" :class="{ highlight: isBest('col-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-2') }}</div>
-                    <div class="result-tag" :class="{ highlight: isBest('diag-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('diag-2') }}</div>
+    <!-- 操作指引面板 -->
+    <div class="instruction-panel">
+        <div class="instruction-header">📋 操作指引</div>
+        <div class="instruction-content" v-html="instructionText"></div>
+    </div>
 
-                    <!-- 第二行 -->
-                    <div class="result-tag" :class="{ highlight: isBest('row-0'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-0') }}</div>
-                    <template v-for="i in [0, 1, 2]">
-                        <div 
-                            class="cell-input" 
-                            :class="{ 
-                                'filled': cells[i] !== '', 
-                                'disabled-look': isInputDisabled(i),
-                                'error-shake': errorCell === i,
-                                'recommended': isRecommendedCell(i)
-                            }"
-                            :id="'cell-' + i"
-                            :aria-label="'格子 ' + (i + 1)"
-                            @click="handleCellClick(i)"
-                            tabindex="0"
-                            @keydown="handleKeyDown(i, $event)">
-                            {{ cells[i] }}
-                        </div>
-                    </template>
-                    <div class="arrow"></div>
+    <div class="page-layout">
+        <div class="game-area">
+            <div class="main-container">
+                <!-- 計算器面板 -->
+                <div class="panel calculator-panel">
+                    <div class="grid-wrapper">
+                        <!-- 第一行 -->
+                        <div class="result-tag" :class="{ highlight: isBest('diag-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('diag-1') }}</div>
+                        <div class="result-tag" :class="{ highlight: isBest('col-0'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-0') }}</div>
+                        <div class="result-tag" :class="{ highlight: isBest('col-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-1') }}</div>
+                        <div class="result-tag" :class="{ highlight: isBest('col-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('col-2') }}</div>
+                        <div class="result-tag" :class="{ highlight: isBest('diag-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('diag-2') }}</div>
 
-                    <!-- 第三行 -->
-                    <div class="result-tag" :class="{ highlight: isBest('row-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-1') }}</div>
-                    <template v-for="i in [3, 4, 5]">
-                        <div 
-                            class="cell-input" 
-                            :class="{ 
-                                'filled': cells[i] !== '', 
-                                'disabled-look': isInputDisabled(i),
-                                'error-shake': errorCell === i,
-                                'recommended': isRecommendedCell(i)
-                            }"
-                            :id="'cell-' + i"
-                            :aria-label="'格子 ' + (i + 1)"
-                            @click="handleCellClick(i)"
-                            tabindex="0"
-                            @keydown="handleKeyDown(i, $event)">
-                            {{ cells[i] }}
-                        </div>
-                    </template>
-                    <div class="arrow"></div>
+                        <!-- 第二行 -->
+                        <div class="result-tag" :class="{ highlight: isBest('row-0'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-0') }}</div>
+                        <template v-for="i in [0, 1, 2]">
+                            <div 
+                                class="cell-input" 
+                                :class="getCellClass(i)"
+                                :id="'cell-' + i"
+                                :aria-label="'格子 ' + (i + 1)"
+                                @click="handleCellClick(i)"
+                                tabindex="0"
+                                @keydown="handleKeyDown(i, $event)">
+                                {{ cells[i] }}
+                            </div>
+                        </template>
+                        <div class="arrow"></div>
 
-                    <!-- 第四行 -->
-                    <div class="result-tag" :class="{ highlight: isBest('row-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-2') }}</div>
-                    <template v-for="i in [6, 7, 8]">
-                        <div 
-                            class="cell-input" 
-                            :class="{ 
-                                'filled': cells[i] !== '', 
-                                'disabled-look': isInputDisabled(i),
-                                'error-shake': errorCell === i,
-                                'recommended': isRecommendedCell(i)
-                            }"
-                            :id="'cell-' + i"
-                            :aria-label="'格子 ' + (i + 1)"
-                            @click="handleCellClick(i)"
-                            tabindex="0"
-                            @keydown="handleKeyDown(i, $event)">
-                            {{ cells[i] }}
-                        </div>
-                    </template>
-                    <div class="arrow"></div>
+                        <!-- 第三行 -->
+                        <div class="result-tag" :class="{ highlight: isBest('row-1'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-1') }}</div>
+                        <template v-for="i in [3, 4, 5]">
+                            <div 
+                                class="cell-input" 
+                                :class="getCellClass(i)"
+                        :id="'cell-' + i"
+                        :aria-label="'格子 ' + (i + 1)"
+                        @click="handleCellClick(i)"
+                        tabindex="0"
+                        @keydown="handleKeyDown(i, $event)">
+                        {{ cells[i] }}
+                    </div>
+                </template>
+                <div class="arrow"></div>
 
-                    <!-- 第五行 -->
-                    <div></div>
-                    <div class="arrow"></div>
-                    <div class="arrow"></div>
-                    <div class="arrow"></div>
-                    <div></div>
-                </div>
+                <!-- 第四行 -->
+                <div class="result-tag" :class="{ highlight: isBest('row-2'), 'arrow-only': filledCount === 0 }">{{ displayEV('row-2') }}</div>
+                <template v-for="i in [6, 7, 8]">
+                    <div 
+                        class="cell-input" 
+                        :class="getCellClass(i)"
+                        :id="'cell-' + i"
+                        :aria-label="'格子 ' + (i + 1)"
+                        @click="handleCellClick(i)"
+                        tabindex="0"
+                        @keydown="handleKeyDown(i, $event)">
+                        {{ cells[i] }}
+                    </div>
+                </template>
+                <div class="arrow"></div>
 
-                <div class="button-group">
-                    <button class="btn btn-undo" @click="undo" :disabled="history.length === 0">
-                        ↶ 撤銷
-                    </button>
-                    <button class="btn btn-reset" @click="resetGrid">
-                        重置盤面
-                    </button>
-                </div>
-
-                <p class="hint-text">點擊格子選擇數字 | 再次點擊可清除 | Ctrl+Z 撤銷</p>
+                <!-- 第五行 -->
+                <div></div>
+                <div class="arrow"></div>
+                <div class="arrow"></div>
+                <div class="arrow"></div>
+                <div></div>
             </div>
 
-            <!-- 獎勵表 -->
-            <div class="panel">
-                <h3 class="panel-title"><span class="icon">💰</span> 獎勵表</h3>
-                <div class="payout-section">
+            <div class="button-group">
+                <button class="btn btn-undo" @click="undo" :disabled="history.length === 0">
+                    ↶ 撤銷
+                </button>
+                <button class="btn btn-reset" @click="resetGrid">
+                    重置盤面
+                </button>
+            </div>
+
+            <!-- 格子圖例 -->
+            <div class="cell-legend">
+                <div class="legend-item"><div class="legend-box initial"></div> 初始</div>
+                <div class="legend-item"><div class="legend-box revealed"></div> 已揭</div>
+                <div class="legend-item"><div class="legend-box recommended"></div> 推薦</div>
+            </div>
+        </div>
+
+        <!-- 最佳選擇 Banner (單一最佳時顯示) -->
+        <div class="best-choice-banner" v-if="filledCount >= 4 && !showVSMode">
+            <div class="banner-header">
+                <div class="banner-left">
+                    <div class="banner-icon">🎯</div>
+                    <div>
+                        <div class="banner-title">最佳選擇</div>
+                        <div class="banner-line">{{ bestLineDisplay.name }}</div>
+                    </div>
+                </div>
+                <div class="banner-right">
+                    <div class="banner-ev-label">平均期望值</div>
+                    <div class="banner-ev-value">{{ bestLineDisplay.ev.toLocaleString() }} <span class="banner-ev-unit">MGP</span></div>
+                </div>
+            </div>
+            <div class="banner-probs">
+                <div v-for="prob in bestLineDisplay.probs" 
+                     :key="prob.mgp"
+                     class="prob-tag"
+                     :class="{ jackpot: prob.mgp >= 10000, 'high-value': prob.mgp >= 1000 && prob.mgp < 10000 }">
+                    <span class="prob-mgp">{{ prob.mgp.toLocaleString() }}</span>
+                    <span class="prob-percent">({{ prob.percent }}%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VS 對決面板 (風險 vs 保底 衝突時顯示) -->
+        <div class="vs-container" v-if="filledCount >= 4 && showVSMode">
+            <div class="vs-card risky">
+                <div class="vs-icon">🎯</div>
+                <div class="vs-title">最佳期望值</div>
+                <div class="vs-line-name">{{ vsData.risky.name }}</div>
+                <div class="vs-value-box">
+                    <div class="vs-label">平均期望值</div>
+                    <div class="vs-value gold">{{ vsData.risky.ev.toLocaleString() }}</div>
+                    <div class="vs-unit">MGP</div>
+                </div>
+                <div class="vs-probs">
+                    <div v-for="prob in vsData.risky.topProbs" :key="prob.mgp" class="vs-prob-row">
+                        <span class="vs-prob-val">{{ prob.mgp.toLocaleString() }}</span>
+                        <span class="vs-prob-pct">{{ prob.percent }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vs-center">
+                <div class="vs-badge">VS</div>
+                <div class="win-rate-label">擊敗保底機率</div>
+                <div class="win-rate-val">{{ vsData.winRate }}%</div>
+                <div class="win-rate-desc" :style="{ color: vsData.riskColor }">{{ vsData.riskLabel }}</div>
+            </div>
+
+            <div class="vs-card safe">
+                <div class="vs-icon">🛡️</div>
+                <div class="vs-title">最高保底</div>
+                <div class="vs-line-name">{{ vsData.safe.name }}</div>
+                <div class="vs-value-box">
+                    <div class="vs-label">保證獲得</div>
+                    <div class="vs-value blue">{{ vsData.safe.minMGP.toLocaleString() }}</div>
+                    <div class="vs-unit">MGP</div>
+                </div>
+                <div class="vs-probs" style="justify-content: center; color: var(--text-muted); font-size: 11px; padding: 10px;">
+                    放棄大獎<br>穩拿獎勵
+                </div>
+            </div>
+        </div>
+        </div>
+        </div>
+
+        <!-- 右側獎勵表 (大螢幕顯示) -->
+        <div class="right-area">
+            <div class="payout-panel-side">
+                <h3>💰 獎勵表</h3>
+                <div class="payout-section-side">
                     <table class="payout-table">
                         <tr><th>總和</th><th>MGP</th></tr>
                         <tr class="row-jackpot"><td>6</td><td>10,000</td></tr>
@@ -899,43 +1450,54 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- 右側：分析面板 -->
-        <div class="right-section">
+    <!-- 分析區域（可摺疊） -->
+    <div class="analysis-section">
+        <button class="analysis-toggle" :class="{ expanded: showAnalysis }" @click="showAnalysis = !showAnalysis">
+            <span>📊 詳細分析</span>
+            <span class="toggle-icon">▼</span>
+        </button>
+        
+        <div class="analysis-content" :class="{ show: showAnalysis }">
             <!-- 揭格建議 -->
-            <div class="panel suggestion-panel" v-if="filledCount < 4">
+            <div class="panel suggestion-panel" v-if="filledCount > 0 && filledCount < 4">
                 <h3 class="panel-title"><span class="icon">🎯</span> 揭格建議</h3>
                 <div class="suggestion-content">
-                    <p v-if="filledCount === 0">
-                        輸入第一個已知數字開始分析
-                    </p>
-                    <template v-else>
-                        <p>
+                    <p>
+                        <template v-if="bestRevealCells.length === 1">
                             建議揭開位置 <span class="suggestion-highlight">{{ bestRevealCell + 1 }}</span> 號格
-                            <br>
-                            <small style="color: var(--text-muted)">預期後續最佳 EV: {{ bestRevealEV.toLocaleString() }} MGP</small>
-                        </p>
-                        <div class="suggestion-grid">
-                            <div v-for="i in 9" 
-                                 :key="i"
-                                 class="suggestion-cell"
-                                 :class="{ 
-                                     best: (i-1) === bestRevealCell && cells[i-1] === '',
-                                     disabled: cells[i-1] !== ''
-                                 }">
-                                <template v-if="cells[i-1] !== ''">
-                                    <span style="color: var(--gold)">{{ cells[i-1] }}</span>
-                                </template>
-                                <template v-else>
-                                    <span>{{ i }}</span>
-                                    <span class="ev-value">{{ revealAnalysis[i-1] ? revealAnalysis[i-1].toLocaleString() : '-' }}</span>
-                                </template>
-                            </div>
+                        </template>
+                        <template v-else>
+                            建議揭開位置 
+                            <span v-for="(cellIdx, i) in bestRevealCells" :key="cellIdx">
+                                <span class="suggestion-highlight">{{ cellIdx + 1 }}</span><span v-if="i < bestRevealCells.length - 1">、</span>
+                            </span>
+                            號格 (等價)
+                        </template>
+                        <br>
+                        <small style="color: var(--text-muted)">預期後續最佳 EV: {{ bestRevealEV.toLocaleString() }} MGP</small>
+                    </p>
+                    <div class="suggestion-grid">
+                        <div v-for="i in 9" 
+                             :key="i"
+                             class="suggestion-cell"
+                             :class="{ 
+                                 best: bestRevealCells.includes(i-1) && cells[i-1] === '',
+                                 disabled: cells[i-1] !== ''
+                             }">
+                            <template v-if="cells[i-1] !== ''">
+                                <span style="color: var(--gold)">{{ cells[i-1] }}</span>
+                            </template>
+                            <template v-else>
+                                <span>{{ i }}</span>
+                                <span class="ev-value">{{ revealAnalysis[i-1] ? revealAnalysis[i-1].toLocaleString() : '-' }}</span>
+                            </template>
                         </div>
-                        <p style="font-size: 12px; color: var(--text-muted);">
-                            數值表示揭開該格後的預期最佳線 EV
-                        </p>
-                    </template>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted);">
+                        數值表示揭開該格後的預期最佳線 EV
+                    </p>
                 </div>
             </div>
 
@@ -994,6 +1556,38 @@
                     <div class="legend-item"><span class="legend-dot low"></span> 其他</div>
                 </div>
             </div>
+
+            <!-- 獎勵表 -->
+            <div class="panel">
+                <h3 class="panel-title"><span class="icon">💰</span> 獎勵表</h3>
+                <div class="payout-section">
+                    <table class="payout-table">
+                        <tr><th>總和</th><th>MGP</th></tr>
+                        <tr class="row-jackpot"><td>6</td><td>10,000</td></tr>
+                        <tr><td>7</td><td>36</td></tr>
+                        <tr class="row-high"><td>8</td><td>720</td></tr>
+                        <tr><td>9</td><td>360</td></tr>
+                        <tr><td>10</td><td>80</td></tr>
+                        <tr><td>11</td><td>252</td></tr>
+                        <tr><td>12</td><td>108</td></tr>
+                        <tr><td>13</td><td>72</td></tr>
+                        <tr><td>14</td><td>54</td></tr>
+                    </table>
+                    <table class="payout-table">
+                        <tr><th>總和</th><th>MGP</th></tr>
+                        <tr><td>15</td><td>180</td></tr>
+                        <tr><td>16</td><td>72</td></tr>
+                        <tr><td>17</td><td>180</td></tr>
+                        <tr><td>18</td><td>119</td></tr>
+                        <tr><td>19</td><td>36</td></tr>
+                        <tr><td>20</td><td>306</td></tr>
+                        <tr class="row-high"><td>21</td><td>1,080</td></tr>
+                        <tr><td>22</td><td>144</td></tr>
+                        <tr class="row-high"><td>23</td><td>1,800</td></tr>
+                        <tr class="row-jackpot"><td>24</td><td>3,600</td></tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1021,13 +1615,15 @@
         el: '#app',
         data: {
             cells: Array(9).fill(''),
+            cellOrder: [],           // 記錄填入順序，區分初始/揭露
             message: '',
             messageType: '',
             errorCell: null,
             history: [],
             sortMode: 'ev',
-            selectedCell: null,  // 當前選擇的格子索引
-            showModal: false,    // Modal 顯示狀態
+            selectedCell: null,
+            showModal: false,
+            showAnalysis: false,     // 分析面板摺疊狀態
             payouts: {
                 6: 10000, 7: 36, 8: 720, 9: 360, 10: 80,
                 11: 252, 12: 108, 13: 72, 14: 54, 15: 180,
@@ -1059,6 +1655,22 @@
                 return 'choosing';
             },
 
+            // 操作指引文字
+            instructionText() {
+                switch(this.filledCount) {
+                    case 0:
+                        return '步驟 0：輸入初始數字<br>請依照遊戲畫面，點擊輸入<span class="text-gold">初始已揭露</span>的數字。';
+                    case 1:
+                        return '步驟 1：選擇揭露位置 (剩餘 3 次)<br>推薦揭露 <span class="text-highlight">綠框格子</span>，有中間先選中間。';
+                    case 2:
+                        return '步驟 2：選擇揭露位置 (剩餘 2 次)<br>推薦揭露 <span class="text-highlight">綠框格子</span>，可獲得最高期望值。';
+                    case 3:
+                        return '步驟 3：選擇揭露位置 (剩餘 1 次)<br>推薦揭露 <span class="text-highlight">綠框格子</span>，做最後確認。';
+                    default:
+                        return '最終選擇：決定連線<br>查看下方分析，選擇 <span class="text-gold">金色高亮</span> 的最佳路線！';
+                }
+            },
+
             phaseText() {
                 if (this.filledCount === 0) return '等待輸入...';
                 if (this.filledCount < 4) return `揭格階段 (${this.filledCount}/4)`;
@@ -1071,6 +1683,116 @@
 
             availableNums() {
                 return [1,2,3,4,5,6,7,8,9].filter(n => !this.usedNums.includes(n));
+            },
+
+            // 計算所有線的期望值和詳細分析（含 payout 分布）
+            lineStatsWithDist() {
+                const stats = [];
+                for (let [key, indices] of Object.entries(this.lines)) {
+                    const analysis = this.analyzeLineWithDist(indices);
+                    stats.push({
+                        key: key,
+                        name: this.lineNames[key],
+                        indices: indices,
+                        ...analysis
+                    });
+                }
+                return stats;
+            },
+
+            // 最佳線（最高 EV）
+            bestLine() {
+                if (this.lineStatsWithDist.length === 0) return null;
+                return this.lineStatsWithDist.reduce((best, line) => 
+                    line.ev > best.ev ? line : best
+                );
+            },
+
+            // 最高保底線
+            safestMinLine() {
+                if (this.lineStatsWithDist.length === 0) return null;
+                return this.lineStatsWithDist.reduce((best, line) => 
+                    line.minMGP > best.minMGP ? line : best
+                );
+            },
+
+            // 是否顯示 VS 模式
+            showVSMode() {
+                if (this.filledCount < 4) return false;
+                if (!this.bestLine || !this.safestMinLine) return false;
+                return this.bestLine.minMGP < this.safestMinLine.minMGP;
+            },
+
+            // 最佳選擇 Banner 資料
+            bestLineDisplay() {
+                if (!this.bestLine) return { name: '-', ev: 0, probs: [] };
+                
+                // 找出所有同分最佳線
+                const maxEV = this.bestLine.ev;
+                const bestLines = this.lineStatsWithDist.filter(l => l.ev === maxEV);
+                const names = bestLines.map(l => l.name).join(' 或 ');
+                
+                const probs = Object.entries(this.bestLine.payoutDist || {})
+                    .map(([mgp, count]) => ({
+                        mgp: parseInt(mgp),
+                        percent: ((count / this.bestLine.count) * 100).toFixed(1)
+                    }))
+                    .sort((a, b) => b.mgp - a.mgp);
+                
+                return { name: names, ev: this.bestLine.ev, probs: probs };
+            },
+
+            // VS 對決資料
+            vsData() {
+                if (!this.bestLine || !this.safestMinLine) {
+                    return { risky: {}, safe: {}, winRate: 0, riskLabel: '', riskColor: '' };
+                }
+                
+                const threshold = this.safestMinLine.minMGP;
+                let winCount = 0;
+                const probs = [];
+                
+                Object.entries(this.bestLine.payoutDist || {}).forEach(([mgp, count]) => {
+                    if (parseInt(mgp) > threshold) winCount += count;
+                    probs.push({ mgp: parseInt(mgp), count: count, percent: ((count / this.bestLine.count) * 100).toFixed(0) });
+                });
+                
+                const winRate = ((winCount / this.bestLine.count) * 100).toFixed(0);
+                
+                let riskLabel, riskColor;
+                if (winRate >= 60) {
+                    riskLabel = '值得一試';
+                    riskColor = 'var(--cyan)';
+                } else if (winRate >= 40) {
+                    riskLabel = '風險適中';
+                    riskColor = 'var(--gold)';
+                } else {
+                    riskLabel = '高風險';
+                    riskColor = 'var(--error-color)';
+                }
+                
+                probs.sort((a, b) => b.mgp - a.mgp);
+                
+                return {
+                    risky: {
+                        name: this.bestLine.name,
+                        ev: this.bestLine.ev,
+                        topProbs: probs.slice(0, 3)
+                    },
+                    safe: {
+                        name: this.safestMinLine.name,
+                        minMGP: this.safestMinLine.minMGP
+                    },
+                    winRate: winRate,
+                    riskLabel: riskLabel,
+                    riskColor: riskColor
+                };
+            },
+
+            // 最佳線格子（用於高亮）
+            bestLineCells() {
+                if (this.filledCount < 4 || !this.bestLine) return [];
+                return this.bestLine.indices;
             },
 
             // 計算所有線的期望值和詳細分析
@@ -1163,6 +1885,28 @@
                 return bestIdx;
             },
 
+            // 所有具有相同最佳 EV 的推薦格子（複數）
+            bestRevealCells() {
+                let bestEV = -1;
+                // 先找出最高 EV
+                this.revealAnalysis.forEach((ev, idx) => {
+                    if (ev !== null && ev > bestEV) {
+                        bestEV = ev;
+                    }
+                });
+                // 收集所有具有相同最高 EV 的格子
+                const result = [];
+                if (bestEV >= 0) {
+                    this.revealAnalysis.forEach((ev, idx) => {
+                        // 使用小數點容差比較，避免浮點數誤差
+                        if (ev !== null && Math.abs(ev - bestEV) < 0.0001) {
+                            result.push(idx);
+                        }
+                    });
+                }
+                return result;
+            },
+
             bestRevealEV() {
                 const best = this.revealAnalysis[this.bestRevealCell];
                 return best || 0;
@@ -1175,6 +1919,83 @@
             document.removeEventListener('keydown', this.handleGlobalKeyDown);
         },
         methods: {
+            // 分析一條線，含 payout 分布
+            analyzeLineWithDist(indices) {
+                let currentSum = 0;
+                let missingIndices = [];
+
+                indices.forEach(idx => {
+                    if (this.cells[idx] !== '') {
+                        currentSum += parseInt(this.cells[idx]);
+                    } else {
+                        missingIndices.push(idx);
+                    }
+                });
+
+                if (missingIndices.length === 0) {
+                    const payout = this.payouts[currentSum] || 0;
+                    return {
+                        ev: payout,
+                        minMGP: payout,
+                        count: 1,
+                        payoutDist: { [payout]: 1 }
+                    };
+                }
+
+                const perms = this.getPermutations(this.availableNums, missingIndices.length);
+                let totalPayout = 0;
+                let minPayout = Infinity;
+                let payoutDist = {};
+
+                perms.forEach(perm => {
+                    const sum = currentSum + perm.reduce((a,b) => a+b, 0);
+                    const payout = this.payouts[sum] || 0;
+                    totalPayout += payout;
+                    if (payout < minPayout) minPayout = payout;
+                    payoutDist[payout] = (payoutDist[payout] || 0) + 1;
+                });
+
+                return {
+                    ev: perms.length === 0 ? 0 : Math.round(totalPayout / perms.length),
+                    minMGP: minPayout === Infinity ? 0 : minPayout,
+                    count: perms.length,
+                    payoutDist: payoutDist
+                };
+            },
+
+            // 取得格子的 CSS 類別
+            getCellClass(index) {
+                const cell = this.cells[index];
+                const isEmpty = cell === '';
+                
+                // 已填入數字的格子
+                if (!isEmpty) {
+                    // 判斷是初始格還是揭露格
+                    const orderIdx = this.cellOrder.indexOf(index);
+                    if (orderIdx === 0) {
+                        return { 'initial-cell': true };
+                    } else {
+                        return { 'revealed-cell': true };
+                    }
+                }
+                
+                // 選線階段：顯示最佳線格子
+                if (this.filledCount >= 4) {
+                    if (this.bestLineCells.includes(index)) {
+                        return { 'best-line-cell': true };
+                    }
+                    return { 'disabled-look': true };
+                }
+                
+                // 揭格階段：顯示推薦揭露格（所有相同 EV 的格子都高亮）
+                const analysis = this.revealAnalysis[index];
+                if (analysis !== null && this.bestRevealCells.includes(index)) {
+                    return { 'recommended': true };
+                }
+                
+                return {};
+            },
+
             // 詳細分析一條線
             analyzeLineDetailed(indices) {
                 let currentSum = 0;
@@ -1331,6 +2152,11 @@
                     // 已填入的格子：清除數字
                     this.saveHistory();
                     this.$set(this.cells, index, '');
+                    // 從填入順序中移除
+                    const orderIdx = this.cellOrder.indexOf(index);
+                    if (orderIdx > -1) {
+                        this.cellOrder.splice(orderIdx, 1);
+                    }
                     this.clearMessage();
                 } else if (this.filledCount < 4) {
                     // 空格子且未滿4個：顯示數字選擇 Modal
@@ -1352,6 +2178,10 @@
                 
                 this.saveHistory();
                 this.$set(this.cells, this.selectedCell, num.toString());
+                // 追蹤填入順序
+                if (!this.cellOrder.includes(this.selectedCell)) {
+                    this.cellOrder.push(this.selectedCell);
+                }
                 this.hideNumberModal();
                 
                 if (this.filledCount >= 4) {
@@ -1371,6 +2201,10 @@
                     }
                     this.saveHistory();
                     this.$set(this.cells, index, num.toString());
+                    // 追蹤填入順序
+                    if (!this.cellOrder.includes(index)) {
+                        this.cellOrder.push(index);
+                    }
                     if (this.filledCount >= 4) {
                         this.showSuccess('已輸入 4 個數字，查看金色高亮的最佳選擇！');
                     }
@@ -1383,6 +2217,11 @@
                     if (this.cells[index] !== '') {
                         this.saveHistory();
                         this.$set(this.cells, index, '');
+                        // 從填入順序中移除
+                        const orderIdx = this.cellOrder.indexOf(index);
+                        if (orderIdx > -1) {
+                            this.cellOrder.splice(orderIdx, 1);
+                        }
                         this.clearMessage();
                     }
                     return;
@@ -1455,12 +2294,16 @@
 
             resetGrid() {
                 this.cells = Array(9).fill('');
+                this.cellOrder = [];
                 this.history = [];
                 this.clearMessage();
             },
 
             saveHistory() {
-                this.history.push([...this.cells]);
+                this.history.push({
+                    cells: [...this.cells],
+                    cellOrder: [...this.cellOrder]
+                });
                 if (this.history.length > 20) {
                     this.history.shift();
                 }
@@ -1468,7 +2311,9 @@
 
             undo() {
                 if (this.history.length > 0) {
-                    this.cells = this.history.pop();
+                    const state = this.history.pop();
+                    this.cells = state.cells;
+                    this.cellOrder = state.cellOrder || [];
                     this.showSuccess('已撤銷');
                 }
             },
