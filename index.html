@@ -996,26 +996,24 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- 數字選擇 Modal -->
-<div class="number-modal" id="number-modal" @click.self="hideNumberModal">
-    <div class="number-grid">
-        <h4>選擇數字</h4>
-        <div class="number-options">
-            <button 
-                v-for="n in 9" 
-                :key="n"
-                class="number-btn"
-                :disabled="usedNums.includes(n)"
-                @click="selectNumber(n)">
-                {{ n }}
-            </button>
-            <button class="number-btn cancel-btn" @click="hideNumberModal">取消</button>
+    <!-- 數字選擇 Modal -->
+    <div class="number-modal" id="number-modal" @click.self="hideNumberModal">
+        <div class="number-grid">
+            <h4>選擇數字</h4>
+            <div class="number-options">
+                <button 
+                    v-for="n in 9" 
+                    :key="n"
+                    class="number-btn"
+                    :disabled="usedNums.includes(n)"
+                    @click="selectNumber(n)">
+                    {{ n }}
+                </button>
+                <button class="number-btn cancel-btn" @click="hideNumberModal">取消</button>
+            </div>
         </div>
     </div>
-</div>
-
 </div>
 
 <script>
